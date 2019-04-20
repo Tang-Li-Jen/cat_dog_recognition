@@ -1,8 +1,9 @@
 from sklearn.model_selection import StratifiedShuffleSplit
 import tensorflow as tf
 import numpy as np
+import vgg16
 import cv2
-
+import os
 
 def generate_label(images_list):
     label = np.array([ 1  if 'cat' in path else 0 for path in train_images_list])
@@ -47,22 +48,26 @@ train_indices, val_indices = next(splitter.split(images, labels))
 train_images, train_labels = images[train_indices], labels[train_indices]
 val_images, val_labels = images[val_indices], labels[val_indices]
 
-num_steps = 1001
+num_epochs = 5
 batch_size = 32
 
-# with tf.device("/gpu:0"):
-#     with tf.Session() as sess:
-#     init = tf.initialize_all_variables()
-#     sess.run(init)
-#     print ("Initialized")
-#     for step in range(num_steps):
-#         offset = (step * batch_size) % (train_labels.shape[0] - batch_size)
-#         batch_data = train_dataset[offset:(offset + batch_size), :, :, :]
-#         batch_labels = train_labels[offset:(offset + batch_size), :]
-#         feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels}
-#         _, l, predictions = session.run([optimizer, loss, train_prediction], feed_dict=feed_dict)
-#         if (step % 50 == 0):
-#             print ("Minibatch loss at step", step, ":", l)
-#             print ("Minibatch accuracy: %.1f%%" % accuracy(predictions, batch_labels))
-#             print ("Validation accuracy: %.1f%%" % accuracy(valid_prediction.eval(), valid_labels))
-#             #print ("Test accuracy: %.1f%%" % accuracy(test_prediction.eval(), test_labels))
+with tf.device("/gpu:0"):
+    with tf.Session() as sess:
+        _images = tf.placeholder(tf.float32, shape=(None, 224, 224, 3), name="images")
+        _labels = tf.placeholder(tf.float32, shape=(None, 1), name='labels')
+
+        vgg = Vgg16Model()
+        vgg.build(_images)
+
+        init = tf.initialize_all_variables()
+        sess.run(init)
+        print ("Initialized")
+        for epoch in range(num_epochs):
+            for batch_train_images, batch_train_labels in get_batches(train_images, train_labels, batch_size=batch_size):
+                feed_dict = {_images : batch_train_images, _labels : batch_train_labels}
+                _, l, predictions = session.run([optimizer, loss, prediction], feed_dict=feed_dict)
+                if (step % 50 == 0):
+                    print ("Minibatch loss at step", step, ":", l)
+                    print ("Minibatch accuracy: %.1f%%" % accuracy(predictions, batch_labels))
+                    # print ("Validation accuracy: %.1f%%" % accuracy(valid_prediction.eval(), valid_labels))
+                    #print ("Test accuracy: %.1f%%" % accuracy(test_prediction.eval(), test_labels))
