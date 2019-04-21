@@ -53,11 +53,8 @@ batch_size = 32
 
 with tf.device("/gpu:0"):
     with tf.Session() as sess:
-        _images = tf.placeholder(tf.float32, shape=(None, 224, 224, 3), name="images")
-        _labels = tf.placeholder(tf.float32, shape=(None, 1), name='labels')
-
         vgg = Vgg16Model()
-        vgg.build(_images)
+        vgg.build()
 
         init = tf.initialize_all_variables()
         sess.run(init)

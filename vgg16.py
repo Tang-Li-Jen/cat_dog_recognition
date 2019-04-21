@@ -20,18 +20,17 @@ class Vgg16:
         self.data_dict = np.load(vgg16_npy_path, encoding='latin1').item()
         print("npy file loaded")
 
-    def build(self, bgr):
+    def build(self):
         """
         load variable from npy to build the VGG
         :param rgb: rgb image [batch, height, width, 3] values scaled [0, 1]
         """
 
-        start_time = time.time()
-        print("build model started")
-        # rgb_scaled = rgb * 255.0
+        _images = tf.placeholder(tf.float32, shape=(None, 224, 224, 3), name="images")
+        _labels = tf.placeholder(tf.float32, shape=(None, 1), name='labels')
 
         # Convert RGB to BGR
-        blue, green, red = tf.split(axis=3, num_or_size_splits=3, value=bgr)
+        blue, green, red = tf.split(axis=3, num_or_size_splits=3, value=_images)
         assert blue.get_shape().as_list()[1:] == [224, 224, 1]
         assert green.get_shape().as_list()[1:] == [224, 224, 1]
         assert red.get_shape().as_list()[1:] == [224, 224, 1]
@@ -80,10 +79,9 @@ class Vgg16:
         self.fc6 = tf.layers.dense(self.flatten, 256, activation=tf.nn.relu, name='fc6')
         self.fc7 = tf.layers.dense(self.fc6, 128, activation=tf.nn.relu, name='fc7')
         self.prediction = tf.layers.dense(self.fc7, 1, activation=tf.nn.sigmoid, name='prediction')
-        self.loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=1, logits=self.prediction)
+        self.loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=_labels, logits=self.prediction)
         self.optimizer = tf.train.RMSPropOptimizer(learning_rate=0.1).minimize(loss)
         # self.data_dict = None
-        print(("build model finished: %ds" % (time.time() - start_time)))
 
     def avg_pool(self, bottom, name):
         return tf.nn.avg_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name=name)
