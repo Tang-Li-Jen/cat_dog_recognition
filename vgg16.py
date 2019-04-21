@@ -85,6 +85,8 @@ class Vgg16:
         self.optimizer = tf.train.RMSPropOptimizer(learning_rate=0.1).minimize(self.loss)
         
         self.prediction = tf.nn.sigmoid(self.logits, name='prediction')
+        self.correct_pred = tf.equal(tf.round(self.prediction), _labels)
+        self.accuracy = tf.reduce_mean(tf.cast(self.correct_pred, tf.float32))
         # self.data_dict = None
 
     def avg_pool(self, bottom, name):
