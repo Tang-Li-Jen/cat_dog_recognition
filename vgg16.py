@@ -78,9 +78,12 @@ class Vgg16:
         self.flatten = tf.layers.flatten(self.pool5, name='flatten')
         self.fc6 = tf.layers.dense(self.flatten, 256, activation=tf.nn.relu, name='fc6')
         self.fc7 = tf.layers.dense(self.fc6, 128, activation=tf.nn.relu, name='fc7')
-        self.prediction = tf.layers.dense(self.fc7, 1, activation=tf.nn.sigmoid, name='prediction')
-        self.loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=_labels, logits=self.prediction)
-        self.optimizer = tf.train.RMSPropOptimizer(learning_rate=0.1).minimize(loss)
+        self.logits = tf.layers.dense(self.fc7, 1, activation=tf.nn.sigmoid, name='logit')
+        # self.prediction = tf.layers.dense(self.fc7, 1, activation=tf.nn.sigmoid, name='prediction')
+        self.loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=_labels, logits=self.logits)
+        self.optimizer = tf.train.RMSPropOptimizer(learning_rate=0.1).minimize(self.loss)
+        
+        self.prediction = tf.math.sigmoid(self.logits, name='prediction')
         # self.data_dict = None
 
     def avg_pool(self, bottom, name):

@@ -7,6 +7,7 @@ import os
 
 def generate_label(images_list):
     label = np.array([ 1  if 'cat' in path else 0 for path in train_images_list])
+    label = label.reshape((-1, 1))
     return label
 
 def load_image(image_path, mean=vgg_mean):
@@ -53,18 +54,18 @@ batch_size = 32
 
 with tf.device("/gpu:0"):
     with tf.Session() as sess:
-        vgg = Vgg16Model()
+        vgg = vgg16.Vgg16("./vgg16.npy")
         vgg.build()
 
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
         sess.run(init)
         print ("Initialized")
         for epoch in range(num_epochs):
             for batch_train_images, batch_train_labels in get_batches(train_images, train_labels, batch_size=batch_size):
-                feed_dict = {_images : batch_train_images, _labels : batch_train_labels}
-                _, l, predictions = session.run([optimizer, loss, prediction], feed_dict=feed_dict)
-                if (step % 50 == 0):
-                    print ("Minibatch loss at step", step, ":", l)
-                    print ("Minibatch accuracy: %.1f%%" % accuracy(predictions, batch_labels))
+                feed_dict = {"images:0" : batch_train_images, "labels:0" : batch_train_labels}
+                _, l, predictions = sess.run([vgg.optimizer, vgg.loss, vgg.prediction], feed_dict=feed_dict)
+                # if (step % 50 == 0):
+                #     print ("Minibatch loss at step", step, ":", l)
+                #     print ("Minibatch accuracy: %.1f%%" % accuracy(predictions, batch_labels))
                     # print ("Validation accuracy: %.1f%%" % accuracy(valid_prediction.eval(), valid_labels))
                     #print ("Test accuracy: %.1f%%" % accuracy(test_prediction.eval(), test_labels))
