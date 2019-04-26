@@ -9,7 +9,7 @@ VGG_MEAN = [103.939, 116.779, 123.68]
 
 
 class Vgg16:
-    def __init__(self, vgg16_npy_path=None):
+    def __init__(self, vgg16_npy_path=None, restore_form = None):
         # if vgg16_npy_path is None:
         #     path = inspect.getfile(Vgg16)
         #     path = os.path.abspath(os.path.join(path, os.pardir))
@@ -76,13 +76,15 @@ class Vgg16:
         # self.prob = tf.nn.softmax(self.fc8, name="prob")
 
         self.flatten = tf.layers.flatten(self.pool5, name='flatten')
-        self.fc6 = tf.layers.dense(self.flatten, 256, activation=tf.nn.relu, name='fc6')
-        self.fc7 = tf.layers.dense(self.fc6, 128, activation=tf.nn.relu, name='fc7')
+        
+        self.fc6 = tf.layers.dense(self.flatten, 1000, activation=tf.nn.relu, name='fc6')
+        
+        self.fc7 = tf.layers.dense(self.fc6, 256, activation=tf.nn.relu, name='fc7')
+        
         self.logits = tf.layers.dense(self.fc7, 1, activation=None, name='logit')
-        # self.prediction = tf.layers.dense(self.fc7, 1, activation=tf.nn.sigmoid, name='prediction')
         self.cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=_labels, logits=self.logits, name='cross_entropy')        
         self.loss = tf.reduce_mean(self.cross_entropy, name='loss')
-        self.optimizer = tf.train.RMSPropOptimizer(learning_rate=0.1).minimize(self.loss)
+        self.optimizer = tf.train.RMSPropOptimizer(learning_rate=0.01).minimize(self.loss)
         
         self.prediction = tf.nn.sigmoid(self.logits, name='prediction')
         self.correct_pred = tf.equal(tf.round(self.prediction), _labels)
